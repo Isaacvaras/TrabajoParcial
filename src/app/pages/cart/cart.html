@@ -156,6 +156,50 @@
                 </button>
               </ng-template>
             </div>
+                        <div class="mb-3">
+              <label class="form-label">Método de pago</label>
+              <div class="d-flex flex-column gap-2">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="paymentMethod"
+                    id="paymentCard"
+                    value="tarjeta"
+                    [(ngModel)]="selectedPaymentMethod"
+                  >
+                  <label class="form-check-label" for="paymentCard">
+                     Tarjeta de crédito/débito
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="paymentMethod"
+                    id="paymentWallet"
+                    value="billetera"
+                    [(ngModel)]="selectedPaymentMethod"
+                  >
+                  <label class="form-check-label" for="paymentWallet">
+                     Billetera digital
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="paymentMethod"
+                    id="paymentCash"
+                    value="contraentrega"
+                    [(ngModel)]="selectedPaymentMethod"
+                  >
+                  <label class="form-check-label" for="paymentCash">
+                     Pago contraentrega
+                  </label>
+                </div>
+              </div>
+            </div>
 
    
             <div class="d-flex justify-content-between mb-2">
@@ -183,3 +227,211 @@
 
   </div>
 </div>
+
+<div class="modal" [class.show]="showCardModal" [style.display]="showCardModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"> Datos de la Tarjeta</h5>
+        <button type="button" class="btn-close" (click)="closeCardModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="cardNumber" class="form-label">Número de tarjeta</label>
+            <input
+              type="text"
+              class="form-control"
+              id="cardNumber"
+              placeholder="1234 5678 9012 3456"
+              [(ngModel)]="cardData.number"
+              name="cardNumber"
+              maxlength="19"
+            >
+          </div>
+          <div class="mb-3">
+            <label for="cardHolder" class="form-label">Titular de la tarjeta</label>
+            <input
+              type="text"
+              class="form-control"
+              id="cardHolder"
+              placeholder="NOMBRE APELLIDO"
+              [(ngModel)]="cardData.holder"
+              name="cardHolder"
+            >
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="cardExpiry" class="form-label">Fecha de vencimiento</label>
+              <input
+                type="text"
+                class="form-control"
+                id="cardExpiry"
+                placeholder="MM/AA"
+                [(ngModel)]="cardData.expiry"
+                name="cardExpiry"
+                maxlength="5"
+              >
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="cardCvv" class="form-label">CVV</label>
+              <input
+                type="text"
+                class="form-control"
+                id="cardCvv"
+                placeholder="123"
+                [(ngModel)]="cardData.cvv"
+                name="cardCvv"
+                maxlength="4"
+              >
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCardModal()">Cancelar</button>
+        <button type="button" class="btn btn-success" (click)="procesarPagoTarjeta()">Pagar S/ {{ total | number:'1.2-2' }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" [class.show]="showCardModal" [style.display]="showCardModal ? 'block' : 'none'"></div>
+
+
+<div class="modal" [class.show]="showWalletModal" [style.display]="showWalletModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"> Billetera Digital</h5>
+        <button type="button" class="btn-close" (click)="closeWalletModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-3">Selecciona tu billetera digital preferida:</p>
+        
+       
+        <div class="d-grid gap-2 mb-3">
+          <button 
+            class="btn btn-outline-primary text-start d-flex align-items-center"
+            [class.active]="selectedWallet === 'yape'"
+            (click)="selectWallet('yape')">
+            <span class="me-2">💜</span> Yape
+          </button>
+          <button 
+            class="btn btn-outline-primary text-start d-flex align-items-center"
+            [class.active]="selectedWallet === 'plin'"
+            (click)="selectWallet('plin')">
+            <span class="me-2">💙</span> Plin
+          </button>
+          <button 
+            class="btn btn-outline-primary text-start d-flex align-items-center"
+            [class.active]="selectedWallet === 'pagoefectivo'"
+            (click)="selectWallet('pagoefectivo')">
+            <span class="me-2">🟢</span> PagoEfectivo
+          </button>
+        </div>
+
+        
+        <div *ngIf="selectedWallet" class="text-center p-3 border rounded bg-light">
+          <p class="fw-bold mb-2">Escanea el código QR para pagar:</p>
+          <img 
+            [src]="walletQRImages[selectedWallet]" 
+            [alt]="'QR ' + selectedWallet"
+            class="img-fluid"
+            style="max-width: 250px;">
+          <p class="mt-2 fw-bold text-success">S/ {{ total | number:'1.2-2' }}</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeWalletModal()">Cancelar</button>
+        <button 
+          type="button" 
+          class="btn btn-success" 
+          (click)="confirmarPagoBilletera()"
+          [disabled]="!selectedWallet">
+          Confirmar Pago
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" [class.show]="showWalletModal" [style.display]="showWalletModal ? 'block' : 'none'"></div>
+
+
+<div class="modal" [class.show]="showCashModal" [style.display]="showCashModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"> Pago Contraentrega</h5>
+        <button type="button" class="btn-close" (click)="closeCashModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-3">Completa los datos para el pago contraentrega:</p>
+        
+        <form>
+          <div class="mb-3">
+            <label for="cashPhone" class="form-label">Número de celular <span class="text-danger">*</span></label>
+            <input
+              type="tel"
+              class="form-control"
+              id="cashPhone"
+              placeholder="999 999 999"
+              [(ngModel)]="cashData.phone"
+              name="cashPhone"
+              maxlength="9"
+            >
+            <div class="form-text">Ingresa el número de contacto para la entrega</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="cashDni" class="form-label">DNI de quien recibe <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              class="form-control"
+              id="cashDni"
+              placeholder="12345678"
+              [(ngModel)]="cashData.dni"
+              name="cashDni"
+              maxlength="8"
+            >
+            <div class="form-text">Documento de identidad para verificar la entrega</div>
+          </div>
+
+          <div class="alert alert-info">
+            <small>
+              <strong>⚠️ Importante:</strong> El pago se realizará al momento de la entrega. 
+              Asegúrate de tener el monto exacto de <strong>S/ {{ total | number:'1.2-2' }}</strong>
+            </small>
+          </div>
+
+          <div class="form-check mb-3">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="acceptTerms"
+              [(ngModel)]="cashData.acceptTerms"
+              name="acceptTerms"
+            >
+            <label class="form-check-label" for="acceptTerms">
+              Acepto los <a href="#" class="text-primary">términos y condiciones</a> de la empresa
+            </label>
+          </div>
+
+          <div class="text-center">
+            <p class="fw-bold text-success mb-0">Total a pagar: S/ {{ total | number:'1.2-2' }}</p>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCashModal()">Cancelar</button>
+        <button 
+          type="button" 
+          class="btn btn-success" 
+          (click)="confirmarContraentrega()"
+          [disabled]="!cashData.phone || !cashData.dni || !cashData.acceptTerms">
+          Confirmar Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" [class.show]="showCashModal" [style.display]="showCashModal ? 'block' : 'none'"></div>

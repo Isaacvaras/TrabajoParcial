@@ -16,8 +16,29 @@ import { Address } from '../../models/user';
 })
 export class Cart {
 
-  selectedAddressIndex: number | null = null;
+    selectedAddressIndex: number | null = null;
+  selectedPaymentMethod: string = '';
+  showCardModal: boolean = false;
+  showWalletModal: boolean = false;
+  showCashModal: boolean = false;
+  selectedWallet: string = '';
+  cardData = {
+    number: '',
+    holder: '',
+    expiry: '',
+    cvv: ''
+  };
+  cashData = {
+    phone: '',
+    dni: '',
+    acceptTerms: false
+  };
 
+  walletQRImages: { [key: string]: string } = {
+    'yape': 'assets/qr-yape.jpg',
+    'plin': 'assets/qr-plin.avif',
+    'pagoefectivo': 'assets/qr-pagoefectivo.png'
+  };
   constructor(
     public cartService: CartService,
     private auth: AuthService,
@@ -78,7 +99,7 @@ export class Cart {
   }
 
 
-  finalizarCompra() {
+finalizarCompra() {
     if (this.items.length === 0) {
       alert('Tu carrito está vacío.');
       return;
@@ -89,10 +110,107 @@ export class Cart {
       return;
     }
 
-    const direccionElegida = this.addresses[this.selectedAddressIndex];
+    if (!this.selectedPaymentMethod) {
+      alert('Selecciona un método de pago.');
+      return;
+    }
+
+  
+    if (this.selectedPaymentMethod === 'tarjeta') {
+      this.showCardModal = true;
+      return;
+    }
+
+    
+    if (this.selectedPaymentMethod === 'billetera') {
+      this.showWalletModal = true;
+      return;
+    }
+
+    
+    if (this.selectedPaymentMethod === 'contraentrega') {
+      this.showCashModal = true;
+      return;
+    }
+
+    this.completarCompra();
+  }
+
+  closeCardModal() {
+    this.showCardModal = false;
+    this.cardData = {
+      number: '',
+      holder: '',
+      expiry: '',
+      cvv: ''
+    };
+  }
+
+  procesarPagoTarjeta() {
+  
+    if (!this.cardData.number || !this.cardData.holder || !this.cardData.expiry || !this.cardData.cvv) {
+      alert('Por favor completa todos los datos de la tarjeta.');
+      return;
+    }
+
+    console.log('Procesando pago con tarjeta:', this.cardData);
+    this.closeCardModal();
+    this.completarCompra();
+  }
+
+  closeWalletModal() {
+    this.showWalletModal = false;
+    this.selectedWallet = '';
+  }
+
+  selectWallet(wallet: string) {
+    this.selectedWallet = wallet;
+  }
+
+  confirmarPagoBilletera() {
+    if (!this.selectedWallet) {
+      alert('Por favor selecciona una billetera digital.');
+      return;
+    }
+
+    console.log('Pago realizado con:', this.selectedWallet);
+    this.closeWalletModal();
+    this.completarCompra();
+  }
+
+  closeCashModal() {
+    this.showCashModal = false;
+    this.cashData = {
+      phone: '',
+      dni: '',
+      acceptTerms: false
+    };
+  }
+
+  confirmarContraentrega() {
+    if (!this.cashData.phone || !this.cashData.dni) {
+      alert('Por favor completa todos los campos.');
+      return;
+    }
+
+    if (!this.cashData.acceptTerms) {
+      alert('Debes aceptar los términos y condiciones.');
+      return;
+    }
+
+    console.log('Pago contraentrega confirmado:', this.cashData);
+    this.closeCashModal();
+    this.completarCompra();
+  }
+
+  private completarCompra() {
+    const direccionElegida = this.addresses[this.selectedAddressIndex!];
     console.log('Compra realizada con envío a:', direccionElegida);
+    console.log('Método de pago:', this.selectedPaymentMethod);
 
     alert('Compra realizada. ¡Gracias por tu pedido!');
     this.cartService.clear();
+    this.selectedPaymentMethod = '';
   }
 }
+
