@@ -9,6 +9,7 @@ import { Address } from '../../models/user';
 import { PurchaseService } from '../../services/purchase.service';
 import { ProductService } from '../../services/product.services';
 import { Alerts } from '../../utils/alerts';
+import { ReviewService } from '../../services/review.service';
 
 @Component({
   selector: 'app-cart',
@@ -23,7 +24,15 @@ export class Cart {
   showCardModal: boolean = false;
   showWalletModal: boolean = false;
   showCashModal: boolean = false;
+  showReviewModal: boolean = false;
   selectedWallet: string = '';
+  purchasedItems: CartItem[] = [];
+  reviewData = {
+    gameId: 0,
+    gameName: '',
+    rating: 0,
+    comment: '',
+  };
   cardData = {
     number: '',
     holder: '',
@@ -44,6 +53,7 @@ export class Cart {
   constructor(
     public cartService: CartService,
     private auth: AuthService,
+    private reviewService: ReviewService,
     private router: Router,
     private purchaseService: PurchaseService,
     private productService: ProductService
@@ -100,7 +110,6 @@ export class Cart {
       Alerts.warning('Selecciona o agrega una dirección antes de comprar.');
       return;
     }
-    
 
     if (!this.selectedPaymentMethod) {
       Alerts.warning('Selecciona un método de pago.');
@@ -214,8 +223,87 @@ export class Cart {
         quantity: item.quantity,
       }))
     );
+
+    this.purchasedItems = [...this.items];
+
     Alerts.success('Compra realizada. ¡Gracias por tu pedido!');
     this.cartService.clear();
     this.selectedPaymentMethod = '';
+
+    if (this.purchasedItems.length > 0) {
+      this.openReviewModal(this.purchasedItems[0]);
+    }
+  }
+  openReviewModal(item: CartItem): void {
+    this.reviewData = {
+      gameId: item.id,
+      gameName: item.name,
+      rating: 0,
+      comment: '',
+    };
+    this.showReviewModal = true;
+  }
+
+  closeReviewModal(): void {
+    this.showReviewModal = false;
+    this.reviewData = {
+      gameId: 0,
+      gameName: '',
+      rating: 0,
+      comment: '',
+    };
+  }
+
+  setRating(rating: number): void {
+    this.reviewData.rating = rating;
+  }
+
+  submitReview(): void {
+    if (this.reviewData.rating === 0) {
+      alert('Por favor selecciona una calificación.');
+      return;
+    }
+
+    if (!this.reviewData.comment.trim()) {
+      alert('Por favor escribe un comentario.');
+      return;
+    }
+
+    const currentUser = this.auth.currentUserData();
+    if (!currentUser) return;
+
+    this.reviewService.addReview(
+      this.reviewData.gameId,
+      this.reviewData.gameName,
+      currentUser.correo,
+      currentUser.nombre,
+      this.reviewData.rating,
+      this.reviewData.comment
+    );
+
+    alert('¡Gracias por tu reseña!');
+
+    const currentIndex = this.purchasedItems.findIndex((i) => i.id === this.reviewData.gameId);
+    if (currentIndex >= 0 && currentIndex < this.purchasedItems.length - 1) {
+      const nextItem = this.purchasedItems[currentIndex + 1];
+      this.closeReviewModal();
+      setTimeout(() => this.openReviewModal(nextItem), 500);
+    } else {
+      this.purchasedItems = [];
+      this.closeReviewModal();
+    }
+  }
+
+  skipReview(): void {
+    const currentIndex = this.purchasedItems.findIndex((i) => i.id === this.reviewData.gameId);
+
+    if (currentIndex >= 0 && currentIndex < this.purchasedItems.length - 1) {
+      const nextItem = this.purchasedItems[currentIndex + 1];
+      this.closeReviewModal();
+      setTimeout(() => this.openReviewModal(nextItem), 500);
+    } else {
+      this.purchasedItems = [];
+      this.closeReviewModal();
+    }
   }
 }

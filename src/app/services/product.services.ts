@@ -120,5 +120,33 @@ this.products = [
     this.save();
   }
 }
+addProduct(product: Omit<Product, 'id'>): Product {
+    const newId = this.products.length > 0 ? Math.max(...this.products.map(p => p.id)) + 1 : 1;
+    const newProduct: Product = { ...product, id: newId };
+    
+    this.products.push(newProduct);
+    this.save();
+    
+    return newProduct;
+  }
+  updateProduct(id: number, updates: Partial<Product>): boolean {
+    const index = this.products.findIndex(p => p.id === id);
+    
+    if (index === -1) return false;
+    
+    this.products[index] = { ...this.products[index], ...updates };
+    this.save();
+    
+    return true;
+  }
+  deleteProduct(id: number): boolean {
+    const initialLength = this.products.length;
+    this.products = this.products.filter(p => p.id !== id);
+    
+    if (this.products.length === initialLength) return false;
+    
+    this.save();
+    return true;
+  }
 
 }

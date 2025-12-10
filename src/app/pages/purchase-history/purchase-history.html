@@ -1,0 +1,168 @@
+
+<div class="purchase-history-container">
+  <div class="history-header">
+    <h1><i class="bi bi-clock-history"></i> Historial de Compras</h1>
+    <p class="text-muted">Revisa tus compras anteriores y solicita devoluciones si es necesario</p>
+  </div>
+
+  <div *ngIf="purchases.length === 0" class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No tienes compras registradas aún.
+  </div>
+
+  <div class="purchases-list">
+    <div *ngFor="let purchase of purchases" class="purchase-card card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <strong>Compra #{{purchase.id}}</strong>
+          <br>
+          <small class="text-muted">{{formatDate(purchase.fecha)}}</small>
+        </div>
+        <div>
+          <span class="badge bg-primary">{{getTotalItems(purchase)}} productos</span>
+          <span class="badge ms-2" [class.bg-success]="purchase.enviadoAlAlmacen" [class.bg-warning]="!purchase.enviadoAlAlmacen">
+            {{purchase.enviadoAlAlmacen ? 'Enviado' : 'Pendiente'}}
+          </span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <h6>Productos:</h6>
+            <ul class="product-list">
+              <li *ngFor="let item of purchase.items" class="product-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{item.name}}</strong>
+                    <br>
+                    <small>Cantidad: {{item.quantity}} | Precio: ${{item.price}}</small>
+                  </div>
+                  <button class="btn btn-sm btn-outline-danger" 
+                          (click)="openReturnRequest(purchase, item.id, item.name, item.quantity)"
+                          title="Solicitar devolución">
+                    <i class="bi bi-arrow-return-left"></i> Devolver
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-4 text-end">
+            <h5 class="text-primary">Total: ${{purchase.total}}</h5>
+            <button class="btn btn-sm btn-info mt-2" (click)="viewDetails(purchase)">
+              <i class="bi bi-eye"></i> Ver Detalles
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div *ngIf="selectedPurchase" class="modal-overlay" (click)="closeDetails()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="bi bi-receipt"></i> Detalles de la Compra #{{selectedPurchase.id}}</h3>
+      <button class="btn-close" (click)="closeDetails()"></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-section">
+        <h5>Información General</h5>
+        <p><strong>Fecha:</strong> {{formatDate(selectedPurchase.fecha)}}</p>
+        <p><strong>Estado:</strong> 
+          <span class="badge" [class.bg-success]="selectedPurchase.enviadoAlAlmacen" [class.bg-warning]="!selectedPurchase.enviadoAlAlmacen">
+            {{selectedPurchase.enviadoAlAlmacen ? 'Enviado al Almacén' : 'Pendiente de Envío'}}
+          </span>
+        </p>
+      </div>
+
+      <div class="detail-section" *ngIf="selectedPurchase.direccion">
+        <h5>Dirección de Envío</h5>
+        <p>{{selectedPurchase.direccion.calle}}</p>
+        <p>{{selectedPurchase.direccion.distrito}}</p>
+        <p *ngIf="selectedPurchase.direccion.recogerTienda" class="text-info">
+          <i class="bi bi-shop"></i> Recoger en tienda
+        </p>
+      </div>
+
+      <div class="detail-section">
+        <h5>Productos</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio Unit.</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedPurchase.items">
+              <td>{{item.name}}</td>
+              <td>{{item.quantity}}</td>
+              <td>${{item.price}}</td>
+              <td>${{item.price * item.quantity}}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="text-end"><strong>Total:</strong></td>
+              <td><strong>${{selectedPurchase.total}}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDetails()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+<div *ngIf="showReturnModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="bi bi-arrow-return-left"></i> Solicitar Devolución</h3>
+      <button class="btn-close" (click)="closeReturnModal()"></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info">
+        <strong>Producto:</strong> {{returnForm.productName}}<br>
+        <strong>Cantidad comprada:</strong> {{returnForm.maxQuantity}}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label"><strong>Cantidad a devolver:</strong></label>
+        <input type="number" class="form-control" [(ngModel)]="returnForm.quantity" 
+               min="1" [max]="returnForm.maxQuantity">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label"><strong>Estado del producto:</strong></label>
+        <select class="form-select" [(ngModel)]="returnForm.productState">
+          <option value="nuevo">Nuevo (sin usar)</option>
+          <option value="dañado">Dañado</option>
+          <option value="incompleto">Incompleto</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label"><strong>Motivo de la devolución:</strong></label>
+        <textarea class="form-control" rows="4" [(ngModel)]="returnForm.reason"
+                  placeholder="Explique el motivo de su devolución..."></textarea>
+      </div>
+
+      <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i> 
+        <strong>Importante:</strong> Su solicitud será revisada por un administrador. 
+        Le notificaremos sobre la decisión lo antes posible.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="submitReturn()">
+        <i class="bi bi-send"></i> Enviar Solicitud
+      </button>
+      <button class="btn btn-secondary" (click)="closeReturnModal()">Cancelar</button>
+    </div>
+  </div>
+</div>

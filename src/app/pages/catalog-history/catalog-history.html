@@ -1,0 +1,106 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+      <i class="bi bi-clock-history"></i> Historial de Modificaciones
+    </h2>
+    <div>
+      <button class="btn btn-danger me-2" (click)="clearHistory()" *ngIf="logs.length > 0">
+        <i class="bi bi-trash"></i> Limpiar Historial
+      </button>
+      <button class="btn btn-secondary" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Volver al Catálogo
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-4">
+          <label class="form-label">Filtrar por acción:</label>
+          <select class="form-select" [(ngModel)]="filterAction" (change)="applyFilter()">
+            <option value="ALL">Todas las acciones</option>
+            <option value="ADD">Añadidos</option>
+            <option value="UPDATE">Actualizados</option>
+            <option value="DELETE">Eliminados</option>
+          </select>
+        </div>
+        <div class="col-md-8">
+          <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle"></i> Mostrando {{ filteredLogs.length }} de {{ logs.length }} registros
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de historial -->
+  <div class="card" *ngIf="filteredLogs.length > 0">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>ID Log</th>
+              <th>Fecha y Hora</th>
+              <th>Acción</th>
+              <th>ID Juego</th>
+              <th>Nombre del Juego</th>
+              <th>Detalles</th>
+              <th>Usuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of filteredLogs">
+              <td><small class="text-muted">{{ log.id.substring(0, 15) }}...</small></td>
+              <td>{{ log.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+              <td>
+                <span class="badge" [ngClass]="getActionBadgeClass(log.action)">
+                  {{ getActionText(log.action) }}
+                </span>
+              </td>
+              <td>{{ log.gameId }}</td>
+              <td><strong>{{ log.gameName }}</strong></td>
+              <td>{{ log.details }}</td>
+              <td>{{ log.user }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje cuando no hay registros -->
+  <div class="alert alert-warning" *ngIf="filteredLogs.length === 0">
+    <i class="bi bi-exclamation-triangle"></i> No hay registros en el historial que coincidan con los filtros seleccionados.
+  </div>
+
+  <!-- Resumen -->
+  <div class="row mt-4" *ngIf="logs.length > 0">
+    <div class="col-md-4">
+      <div class="card text-center bg-success text-white">
+        <div class="card-body">
+          <h3>{{ getAddCount() }}</h3>
+          <p class="mb-0">Juegos Añadidos</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center bg-warning text-white">
+        <div class="card-body">
+          <h3>{{ getUpdateCount() }}</h3>
+          <p class="mb-0">Juegos Actualizados</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center bg-danger text-white">
+        <div class="card-body">
+          <h3>{{ getDeleteCount() }}</h3>
+          <p class="mb-0">Juegos Eliminados</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

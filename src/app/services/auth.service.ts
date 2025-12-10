@@ -62,6 +62,9 @@ export class AuthService {
   isLoggedIn(): boolean {
     return this.getCurrentUser() !== null;
   }
+   currentUserData(): User | null {
+    return this.getCurrentUser();
+  }
   saveAddress(address: Address): void {
     const user = this.getCurrentUser();
     if (!user) return;

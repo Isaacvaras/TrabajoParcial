@@ -1,0 +1,36 @@
+.table-responsive {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.badge {
+  font-size: 0.85rem;
+  padding: 0.5em 0.75em;
+}
+
+.alert {
+  border-left: 4px solid;
+}
+
+.alert-info {
+  border-left-color: #0dcaf0;
+}
+
+.alert-warning {
+  border-left-color: #ffc107;
+}
+
+.card {
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+thead.table-dark {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}

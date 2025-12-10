@@ -1,0 +1,173 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+      <i class="bi bi-chat-left-text"></i> {{ isAdmin ? 'Moderación de Reseñas' : 'Reseñas de Clientes' }}
+    </h2>
+    <button class="btn btn-secondary" (click)="goBack()">
+      <i class="bi bi-arrow-left"></i> Volver al Catálogo
+    </button>
+  </div>
+
+ 
+  <div class="row mb-4" *ngIf="isAdmin">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <label class="form-label">Filtrar por estado:</label>
+              <select class="form-select" [(ngModel)]="filterStatus" (change)="applyFilter()">
+                <option value="ALL">Todas las reseñas</option>
+                <option value="PENDING">Pendientes de responder</option>
+                <option value="ANSWERED">Respondidas</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <div class="alert alert-info mb-0 mt-3 mt-md-0">
+                <i class="bi bi-info-circle"></i> Mostrando {{ filteredReviews.length }} de {{ reviews.length }} reseñas
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="row g-2">
+        <div class="col-6">
+          <div class="card text-center bg-warning text-white">
+            <div class="card-body p-2">
+              <h4 class="mb-0">{{ getPendingCount() }}</h4>
+              <small>Pendientes</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card text-center bg-success text-white">
+            <div class="card-body p-2">
+              <h4 class="mb-0">{{ getAnsweredCount() }}</h4>
+              <small>Respondidas</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="alert alert-info mb-4" *ngIf="!isAdmin">
+    <i class="bi bi-info-circle"></i> Aquí puedes ver las opiniones y calificaciones de nuestros clientes sobre los productos.
+  </div>
+
+
+  <div *ngIf="filteredReviews.length === 0" class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i> No hay reseñas que coincidan con los filtros seleccionados.
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="review-list">
+        <div class="card mb-3" *ngFor="let review of filteredReviews" 
+             [class.border-warning]="!review.adminResponse"
+             [class.border-success]="review.adminResponse">
+          <div class="card-body">
+         
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="user-avatar me-2">
+                    <i class="bi bi-person-circle fs-3 text-primary"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-0">{{ review.userName }}</h5>
+                    <small class="text-muted">{{ review.timestamp | date:'dd/MM/yyyy HH:mm' }}</small>
+                  </div>
+                </div>
+                
+          
+                <div class="mb-2">
+                  <span class="badge bg-info">{{ review.gameName }}</span>
+                </div>
+
+            
+                <div class="rating mb-2">
+                  <span *ngFor="let star of getStarsArray(review.rating)" 
+                        class="star"
+                        [class.filled]="star <= review.rating">
+                    ★
+                  </span>
+                  <span class="ms-2 text-muted">({{ review.rating }}/5)</span>
+                </div>
+              </div>
+
+          
+              <div class="text-end" *ngIf="isAdmin">
+                <span class="badge mb-2" 
+                      [class.bg-warning]="!review.adminResponse"
+                      [class.bg-success]="review.adminResponse">
+                  {{ review.adminResponse ? 'Respondida' : 'Pendiente' }}
+                </span>
+                <br>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteReview(review)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+
+       
+            <div class="review-comment p-3 bg-light rounded mb-3">
+              <p class="mb-0">{{ review.comment }}</p>
+            </div>
+
+         
+            <div *ngIf="review.adminResponse" class="admin-response p-3 border-start border-success border-3 bg-light-subtle">
+              <div class="d-flex align-items-start mb-2">
+                <i class="bi bi-shield-check text-success fs-4 me-2"></i>
+                <div class="flex-grow-1">
+                  <strong class="text-success">{{ review.adminResponse.adminName }}</strong>
+                  <small class="text-muted ms-2">{{ review.adminResponse.timestamp | date:'dd/MM/yyyy HH:mm' }}</small>
+                </div>
+              </div>
+              <p class="mb-0 ms-5">{{ review.adminResponse.message }}</p>
+            </div>
+
+            
+            <div *ngIf="isAdmin && !review.adminResponse && replyingToReview?.id !== review.id">
+              <button class="btn btn-primary btn-sm" (click)="startReply(review)">
+                <i class="bi bi-reply"></i> Responder
+              </button>
+            </div>
+
+            <div *ngIf="isAdmin && replyingToReview?.id === review.id" class="mt-3">
+              <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                  <i class="bi bi-reply-fill"></i> Escribir respuesta
+                </div>
+                <div class="card-body">
+                  <form (ngSubmit)="submitReply()">
+                    <div class="mb-3">
+                      <textarea 
+                        class="form-control" 
+                        rows="4" 
+                        [(ngModel)]="replyMessage"
+                        name="replyMessage"
+                        placeholder="Escribe tu respuesta aquí..."
+                        required></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <button type="submit" class="btn btn-success">
+                        <i class="bi bi-send"></i> Enviar Respuesta
+                      </button>
+                      <button type="button" class="btn btn-secondary" (click)="cancelReply()">
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

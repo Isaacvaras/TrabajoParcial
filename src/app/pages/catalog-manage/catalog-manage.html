@@ -1,0 +1,121 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestión de Catálogo</h2>
+    <div>
+      <button class="btn btn-success me-2" (click)="startAdding()" *ngIf="!isAdding && !editingGame">
+        <i class="bi bi-plus-circle"></i> Añadir Juego
+      </button>
+      <button class="btn btn-secondary" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Volver al Catálogo
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulario para añadir nuevo juego -->
+  <div class="card mb-4" *ngIf="isAdding">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0">Añadir Nuevo Juego</h5>
+    </div>
+    <div class="card-body">
+      <form (ngSubmit)="addGame()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nombre del Juego</label>
+            <input type="text" class="form-control" [(ngModel)]="newGame.name" name="name" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Categoría</label>
+            <select class="form-select" [(ngModel)]="newGame.category" name="category" required>
+              <option value="">Seleccionar categoría</option>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Precio (S/)</label>
+            <input type="number" class="form-control" [(ngModel)]="newGame.price" name="price" step="0.10" min="0" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">URL de Imagen</label>
+            <input type="text" class="form-control" [(ngModel)]="newGame.image" name="image" placeholder="assets/imagen.jpg" required>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-save"></i> Guardar
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancelAdding()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista de juegos con opción de editar -->
+  <div class="row">
+    <div class="col-12">
+      <h4 class="mb-3">Juegos en Catálogo</h4>
+    </div>
+    <div class="col-md-6 mb-3" *ngFor="let game of games">
+      <div class="card" [class.border-primary]="editingGame?.id === game.id">
+        <div class="card-body">
+          <!-- Vista normal -->
+          <div *ngIf="!editingGame || editingGame.id !== game.id">
+            <div class="row">
+              <div class="col-4">
+                <img [src]="game.image" [alt]="game.name" class="img-fluid rounded">
+              </div>
+              <div class="col-8">
+                <h5>{{ game.name }}</h5>
+                <p class="mb-1"><strong>Categoría:</strong> {{ game.category }}</p>
+                <p class="mb-1"><strong>Precio:</strong> S/ {{ game.price }}</p>
+                <p class="mb-1 text-muted"><small>ID: {{ game.id }}</small></p>
+                <div class="d-flex gap-2 mt-2">
+                  <button class="btn btn-sm btn-primary" (click)="startEditing(game)">
+                    <i class="bi bi-pencil"></i> Editar
+                  </button>
+                  <button class="btn btn-sm btn-danger" (click)="deleteGame(game)">
+                    <i class="bi bi-trash"></i> Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vista de edición -->
+          <div *ngIf="editingGame && editingGame.id === game.id">
+            <h5 class="text-primary mb-3">Editando Juego</h5>
+            <form (ngSubmit)="saveGame()">
+              <div class="mb-2">
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-control" [(ngModel)]="editingGame.name" name="editName" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Categoría</label>
+                <select class="form-select" [(ngModel)]="editingGame.category" name="editCategory" required>
+                  <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Precio (S/)</label>
+                <input type="number" class="form-control" [(ngModel)]="editingGame.price" name="editPrice" step="0.10" min="0" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">URL de Imagen</label>
+                <input type="text" class="form-control" [(ngModel)]="editingGame.image" name="editImage" required>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-success">
+                  <i class="bi bi-save"></i> Guardar
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" (click)="cancelEditing()">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

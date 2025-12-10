@@ -1,0 +1,211 @@
+
+<div class="returns-container">
+  <div class="returns-header">
+    <h1><i class="bi bi-arrow-return-left"></i> Gestión de Devoluciones</h1>
+    <p class="text-muted">Administración de solicitudes de devolución de productos</p>
+  </div>
+
+ 
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-primary">
+          <i class="bi bi-list-ul"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{stats.total}}</h3>
+          <p>Total Devoluciones</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-warning">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{stats.pendientes}}</h3>
+          <p>Pendientes</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{stats.aprobadas}}</h3>
+          <p>Aprobadas</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-danger">
+          <i class="bi bi-x-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{stats.rechazadas}}</h3>
+          <p>Rechazadas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ 
+  <div class="filters-section card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label"><strong>Filtrar por Estado:</strong></label>
+          <select class="form-select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+            <option value="todas">Todas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="aprobada">Aprobadas</option>
+            <option value="rechazada">Rechazadas</option>
+            <option value="procesada">Procesadas</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><strong>Filtrar por Condición del Producto:</strong></label>
+          <select class="form-select" [(ngModel)]="filterState" (change)="onFilterChange()">
+            <option value="todos">Todos</option>
+            <option value="nuevo">Nuevo</option>
+            <option value="dañado">Dañado</option>
+            <option value="incompleto">Incompleto</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="returns-list">
+    <div *ngIf="filteredReturns.length === 0" class="alert alert-info">
+      <i class="bi bi-info-circle"></i> No hay devoluciones con los filtros seleccionados.
+    </div>
+
+    <div *ngFor="let ret of filteredReturns" class="return-card card mb-3">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-2">
+            <strong>ID:</strong> {{ret.id}}<br>
+            <small class="text-muted">{{formatDate(ret.requestDate)}}</small>
+          </div>
+          <div class="col-md-3">
+            <strong>Producto:</strong> {{ret.productName}}<br>
+            <small><strong>Cantidad:</strong> {{ret.quantity}}</small>
+          </div>
+          <div class="col-md-2">
+            <strong>Cliente:</strong><br>
+            <small>{{ret.userEmail}}</small>
+          </div>
+          <div class="col-md-2 text-center">
+            <span class="badge {{getStatusBadgeClass(ret.status)}}">{{ret.status.toUpperCase()}}</span><br>
+            <span class="badge {{getStateBadgeClass(ret.productState)}} mt-2">{{ret.productState.toUpperCase()}}</span>
+          </div>
+          <div class="col-md-3 text-end">
+            <button class="btn btn-sm btn-primary me-2" (click)="viewDetails(ret)">
+              <i class="bi bi-eye"></i> Ver Detalles
+            </button>
+            <button *ngIf="ret.status === 'pendiente'" class="btn btn-sm btn-warning" (click)="startProcessing(ret)">
+              <i class="bi bi-pencil"></i> Procesar
+            </button>
+            <button *ngIf="ret.status === 'aprobada'" class="btn btn-sm btn-success" (click)="markAsProcessed(ret)">
+              <i class="bi bi-check-lg"></i> Completar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div *ngIf="selectedReturn" class="modal-overlay" (click)="closeDetails()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="bi bi-info-circle"></i> Detalles de la Devolución</h3>
+      <button class="btn-close" (click)="closeDetails()"></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-section">
+        <h5>Información General</h5>
+        <p><strong>ID Devolución:</strong> {{selectedReturn.id}}</p>
+        <p><strong>ID Compra:</strong> {{selectedReturn.purchaseId}}</p>
+        <p><strong>Fecha Solicitud:</strong> {{formatDate(selectedReturn.requestDate)}}</p>
+        <p *ngIf="selectedReturn.resolutionDate"><strong>Fecha Resolución:</strong> {{formatDate(selectedReturn.resolutionDate)}}</p>
+      </div>
+
+      <div class="detail-section">
+        <h5>Producto</h5>
+        <p><strong>Nombre:</strong> {{selectedReturn.productName}}</p>
+        <p><strong>ID Producto:</strong> {{selectedReturn.productId}}</p>
+        <p><strong>Cantidad:</strong> {{selectedReturn.quantity}}</p>
+        <p><strong>Estado del Producto:</strong> <span class="badge {{getStateBadgeClass(selectedReturn.productState)}}">{{selectedReturn.productState.toUpperCase()}}</span></p>
+      </div>
+
+      <div class="detail-section">
+        <h5>Cliente</h5>
+        <p><strong>Email:</strong> {{selectedReturn.userEmail}}</p>
+        <p><strong>ID Usuario:</strong> {{selectedReturn.userId}}</p>
+      </div>
+
+      <div class="detail-section">
+        <h5>Motivo de la Devolución</h5>
+        <p class="reason-text">{{selectedReturn.reason}}</p>
+      </div>
+
+      <div class="detail-section">
+        <h5>Estado</h5>
+        <p><span class="badge {{getStatusBadgeClass(selectedReturn.status)}}">{{selectedReturn.status.toUpperCase()}}</span></p>
+      </div>
+
+      <div *ngIf="selectedReturn.adminNotes" class="detail-section">
+        <h5>Notas del Administrador</h5>
+        <p class="admin-notes">{{selectedReturn.adminNotes}}</p>
+        <small class="text-muted" *ngIf="selectedReturn.adminEmail">Por: {{selectedReturn.adminEmail}}</small>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDetails()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+<div *ngIf="processingReturn" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="bi bi-pencil-square"></i> Procesar Devolución</h3>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info">
+        <strong>Producto:</strong> {{processingReturn.productName}}<br>
+        <strong>Cliente:</strong> {{processingReturn.userEmail}}<br>
+        <strong>Estado:</strong> <span class="badge {{getStateBadgeClass(processingReturn.productState)}}">{{processingReturn.productState.toUpperCase()}}</span>
+      </div>
+
+      <div class="mb-3">
+        <h5>Motivo del Cliente:</h5>
+        <p class="reason-text">{{processingReturn.reason}}</p>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label"><strong>Notas del Administrador:</strong></label>
+        <textarea class="form-control" rows="4" [(ngModel)]="adminNotes" 
+                  placeholder="Ingrese observaciones o acciones tomadas..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-success me-2" (click)="approveReturn()">
+        <i class="bi bi-check-circle"></i> Aprobar Devolución
+      </button>
+      <button class="btn btn-danger me-2" (click)="rejectReturn()">
+        <i class="bi bi-x-circle"></i> Rechazar Devolución
+      </button>
+      <button class="btn btn-secondary" (click)="cancelProcessing()">Cancelar</button>
+    </div>
+  </div>
+</div>
